@@ -10,14 +10,22 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class ClientGUI extends Application {
+    private ClientGUIBackend cGUIB;
 
     @Override
     public void start(Stage stage) {
+        cGUIB = null;
         stage.setTitle("Chat");
 
         Label history = new Label();
         history.setWrapText(true);
         TextField input = new TextField();
+        input.setOnAction(_ -> {
+            if (!input.getText().isBlank()) {
+                cGUIB.writeMessage(input.getText());
+                input.clear();
+            }
+        });
         Label welcome = new Label();
         VBox bottom = new VBox(2);
         bottom.getChildren().addAll(new Label("  Enter messages below (press enter to send):"), input);
@@ -28,7 +36,7 @@ public class ClientGUI extends Application {
         TextField name = new TextField();
         name.setOnAction(_ -> {
             if (!name.getText().isBlank()) {
-                // do the client stuff here
+                cGUIB = new ClientGUIBackend(history, name.getText());
                 welcome.setText("Welcome " + name.getText());
                 stage.setScene(chat);
             }
@@ -41,6 +49,11 @@ public class ClientGUI extends Application {
 
         stage.setScene(nameScene);
         stage.show();
+        stage.setOnCloseRequest(_ -> {
+            if (cGUIB != null) {
+                cGUIB.shutdown();
+            }
+        });
     }
 
     public static void main(String[] args) {

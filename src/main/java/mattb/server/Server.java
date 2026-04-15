@@ -19,14 +19,16 @@ public class Server {
                 Socket socket = serverSocket.accept();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 String name = reader.readLine();
+                String type = reader.readLine();
                 System.out.println(name + " connected!");
 
-                ClientHandler handler = new ClientHandler(socket, name);
+                ClientHandler handler = new ClientHandler(socket, name, type);
                 clients.add(handler);
                 Thread thread = new Thread(handler);
                 thread.start();
             }
         } catch (IOException | RuntimeException e) {
+            e.printStackTrace();
             System.out.println("An error has occurred");
         }
     }
@@ -39,9 +41,12 @@ public class Server {
      */
     public static void broadcast(ClientHandler clientHandler, String message) {
         for (ClientHandler client : Server.clients) {
-            if (clientHandler == client) continue;
+            if (client.getType().equals(ClientHandler.userType.CLI.toString())) {
+                if (clientHandler == client) continue;
+            }
+
             try {
-                client.writer.println(message);
+                client.writer.println(clientHandler.getName() + ": " + message);
             } catch (Exception e) {
                 Server.clients.remove(client);
             }

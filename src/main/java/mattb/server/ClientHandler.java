@@ -1,13 +1,21 @@
 package mattb.server;
 
-import java.io.*;
-import java.net.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 
 public class ClientHandler implements Runnable {
+    enum userType {
+        CLI, GUI
+    }
+
     private Socket socket;
     private BufferedReader reader;
     public PrintWriter writer;
     private final String name;
+    private final userType type;
 
     /**
      * Initializes {@link ClientHandler ClientHandler's} reader and writer
@@ -15,8 +23,16 @@ public class ClientHandler implements Runnable {
      * @param socket {@link Socket} used for your connection
      * @param name   Name of user
      */
-    public ClientHandler(Socket socket, String name) {
+    public ClientHandler(Socket socket, String name, String type) {
         this.name = name;
+        if (type.equals("CLI")) {
+            this.type = userType.CLI;
+        } else if (type.equals("GUI")) {
+            this.type = userType.GUI;
+        } else {
+            throw new RuntimeException("User type does not exist");
+        }
+
         try {
             this.socket = socket;
             this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -24,6 +40,14 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getType() {
+        return type.toString();
     }
 
     /**
@@ -36,11 +60,11 @@ public class ClientHandler implements Runnable {
         try {
             while ((message = reader.readLine()) != null) {
                 System.out.println(name + ": " + message);
-                Server.broadcast(this, name + ": " + message);
+                Server.broadcast(this, message);
             }
         } catch (IOException e) {
             System.out.println(name + " disconnected");
-            Server.broadcast(this, name + " disconnected");
+            Server.broadcast(this, "disconnected");
         } finally {
             closeEverything();
         }

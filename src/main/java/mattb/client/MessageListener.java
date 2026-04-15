@@ -1,5 +1,7 @@
 package mattb.client;
 
+import javafx.scene.control.Label;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -8,9 +10,10 @@ import java.net.Socket;
 public class MessageListener implements Runnable {
     private Socket socket;
     private BufferedReader reader;
+    private Label chat;
 
     /**
-     * Initializes {@link MessageListener MessageListener's} reader
+     * Initializes {@link MessageListener MessageListener's} reader for CLI
      *
      * @param socket {@link Socket} used for your connection
      */
@@ -18,6 +21,23 @@ public class MessageListener implements Runnable {
         try {
             this.socket = socket;
             this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.chat = null;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Initializes {@link MessageListener MessageListener's} reader for GUI
+     *
+     * @param socket {@link Socket} used for your connection
+     * @param chat   {@link Label} used to display chat
+     */
+    public MessageListener(Socket socket, Label chat) {
+        try {
+            this.socket = socket;
+            this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.chat = chat;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -31,6 +51,9 @@ public class MessageListener implements Runnable {
         String message;
         try {
             while ((message = reader.readLine()) != null) {
+                if (chat != null) {
+                    chat.setText(chat.getText() + "\n" + message);
+                }
                 System.out.println(message);
             }
         } catch (IOException e) {

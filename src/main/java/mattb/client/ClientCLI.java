@@ -5,7 +5,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class Client {
+public class ClientCLI {
     static void main() {
         Scanner input = new Scanner(System.in);
         System.out.println("What name do you want to use?");
@@ -18,6 +18,7 @@ public class Client {
 
             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
             writer.println(name);
+            writer.println("CLI");
 
             while (true) {
                 writer.println(input.nextLine());
