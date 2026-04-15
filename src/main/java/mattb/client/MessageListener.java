@@ -9,6 +9,11 @@ public class MessageListener implements Runnable {
     private Socket socket;
     private BufferedReader reader;
 
+    /**
+     * Initializes {@link MessageListener MessageListener's} reader
+     *
+     * @param socket {@link Socket} used for your connection
+     */
     public MessageListener(Socket socket) {
         try {
             this.socket = socket;
@@ -18,6 +23,9 @@ public class MessageListener implements Runnable {
         }
     }
 
+    /**
+     * Prints out whatever is recieved from the server
+     */
     @Override
     public void run() {
         String message;
@@ -32,6 +40,9 @@ public class MessageListener implements Runnable {
         }
     }
 
+    /**
+     * Shuts down the {@link MessageListener MessageListener's} {@link BufferedReader} and {@link Socket}
+     */
     private void closeEverything() {
         try {
             if (reader != null) reader.close();

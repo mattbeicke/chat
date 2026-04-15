@@ -6,7 +6,7 @@
 
     <groupId>mattb</groupId>
     <artifactId>chat</artifactId>
-    <version>0.0.1</version>
+    <version>1.0.0</version>
 
     <name>chat</name>
 
@@ -15,6 +15,25 @@
         <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
+    <profiles>
+        <profile>
+            <id>server</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <main.class>mattb.server.Server</main.class>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>client</id>
+            <properties>
+                <main.class>mattb.client.Client</main.class>
+            </properties>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
             <plugin>
@@ -22,7 +41,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.2.0</version>
                 <configuration>
-                    <mainClass>com.mattb.Main</mainClass>
+                    <mainClass>${main.class}</mainClass>
                 </configuration>
             </plugin>
         </plugins>

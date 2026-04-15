@@ -7,8 +7,14 @@ public class ClientHandler implements Runnable {
     private Socket socket;
     private BufferedReader reader;
     public PrintWriter writer;
-    private String name;
+    private final String name;
 
+    /**
+     * Initializes {@link ClientHandler ClientHandler's} reader and writer
+     *
+     * @param socket {@link Socket} used for your connection
+     * @param name   Name of user
+     */
     public ClientHandler(Socket socket, String name) {
         this.name = name;
         try {
@@ -20,6 +26,10 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    /**
+     * Prints out whatever is recieved from the client to the servers console and also broadcasts it to all other clients
+     * It also prints and broadcasts a message when a client disconnects
+     */
     @Override
     public void run() {
         String message;
@@ -36,6 +46,9 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    /**
+     * Shuts down the {@link ClientHandler ClientHandler's} {@link BufferedReader}, {@link PrintWriter}, and {@link Socket}
+     */
     private void closeEverything() {
         try {
             if (reader != null) reader.close();

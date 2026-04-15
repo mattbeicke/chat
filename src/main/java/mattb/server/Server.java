@@ -14,6 +14,7 @@ public class Server {
     public static void main(String[] args) {
         try {
             ServerSocket serverSocket = new ServerSocket(43206);
+            System.out.println("Server Online");
             while (true) {
                 Socket socket = serverSocket.accept();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -25,11 +26,17 @@ public class Server {
                 Thread thread = new Thread(handler);
                 thread.start();
             }
-        } catch (IOException e) {
-            System.out.println("Error Has occurred");
+        } catch (IOException | RuntimeException e) {
+            System.out.println("An error has occurred");
         }
     }
 
+    /**
+     * Broadcasts clients sent messages to all other clients (except the sender)
+     *
+     * @param clientHandler Client that sent the message
+     * @param message       Message they sent
+     */
     public static void broadcast(ClientHandler clientHandler, String message) {
         for (ClientHandler client : Server.clients) {
             if (clientHandler == client) continue;
