@@ -13,17 +13,18 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.Socket;
+
 public class ClientGUI extends Application {
-    private ClientGUIBackend cGUIB;
+    private PrintWriter writer;
 
     @Override
     public void start(Stage stage) {
-        cGUIB = null;
         stage.setTitle("Chat");
 
-        /**
-         * setup chat history
-         */
+        // setup chat history
         Label history = new Label();
         history.setWrapText(true);
         history.setPrefWidth(500);
@@ -45,7 +46,7 @@ public class ClientGUI extends Application {
         TextField input = new TextField();
         input.setOnAction(_ -> {
             if (!input.getText().isBlank()) {
-                cGUIB.writeMessage(input.getText());
+                writeMessage(input.getText());
                 input.clear();
             }
         });
@@ -61,7 +62,7 @@ public class ClientGUI extends Application {
         TextField name = new TextField();
         name.setOnAction(_ -> {
             if (!name.getText().isBlank()) {
-                cGUIB = new ClientGUIBackend(history, name.getText());
+                backend(history, name.getText());
                 welcome.setText("Welcome " + name.getText());
                 stage.setScene(chat);
             }
@@ -82,5 +83,34 @@ public class ClientGUI extends Application {
 
     public static void main(String[] args) {
         launch(args);
+    }
+
+    /**
+     * Initializes Client GUI's backend
+     *
+     * @param chat {@link Label} that contains the chat history
+     * @param name user's inputted name (to be sent to server)
+     */
+    public void backend(Label chat, String name) {
+        try {
+            Socket socket = new Socket("localhost", 43206);
+            MessageListener listener = new MessageListener(socket, chat);
+            new Thread(listener).start();
+
+            writer = new PrintWriter(socket.getOutputStream(), true);
+            writer.println(name);
+            writer.println("GUI");
+        } catch (IOException | RuntimeException e) {
+            System.out.println("Server went offline or other issue encountered");
+        }
+    }
+
+    /**
+     * Sends your chat to the server
+     *
+     * @param message what to send to the server
+     */
+    public void writeMessage(String message) {
+        writer.println(message);
     }
 }
