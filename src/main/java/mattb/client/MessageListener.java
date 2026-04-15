@@ -59,6 +59,12 @@ public class MessageListener implements Runnable {
 
                     switch (dataType) {
                         case 0:
+                            message = in.readUTF();
+                            if (chat != null) {
+                                Platform.runLater(() -> chat.setText(chat.getText() + "\n" + message));
+                            } else {
+                                System.out.println(message);
+                            }
                             shutdown();
                             break;
                         case 1:

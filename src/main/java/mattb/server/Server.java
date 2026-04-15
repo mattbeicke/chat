@@ -111,6 +111,10 @@ public class Server {
         clients.remove(clientHandler);
     }
 
+    /**
+     * Shuts down the server gracefully, also shutting down all connected clients too
+     * @param serverSocket {@link ServerSocket} that the server is running
+     */
     public static void shutdown(ServerSocket serverSocket) {
         System.out.println("Shutting down all client connections...");
 
