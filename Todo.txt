@@ -1,6 +1,3 @@
-left align history
-bottom align history
-
 see if merging ClientGUIBackend and ClientGUI is possible (it should be?)
 
 comments (particularly for gui)

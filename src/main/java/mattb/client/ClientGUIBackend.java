@@ -7,12 +7,17 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class ClientGUIBackend {
-    private Socket socket;
     private PrintWriter writer;
 
+    /**
+     * Initializes Client GUI's backend
+     *
+     * @param chat {@link Label} that contains the chat history
+     * @param name user's inputted name (to be sent to server)
+     */
     public ClientGUIBackend(Label chat, String name) {
         try {
-            socket = new Socket("localhost", 43206);
+            Socket socket = new Socket("localhost", 43206);
             MessageListener listener = new MessageListener(socket, chat);
             new Thread(listener).start();
 
@@ -24,16 +29,12 @@ public class ClientGUIBackend {
         }
     }
 
+    /**
+     * Sends your chat to the server
+     *
+     * @param message what to send to the server
+     */
     public void writeMessage(String message) {
         writer.println(message);
-    }
-
-    public void shutdown() {
-        try {
-            if (writer != null) writer.close();
-            if (socket != null) socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }

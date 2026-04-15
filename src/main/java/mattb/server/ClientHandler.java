@@ -59,7 +59,7 @@ public class ClientHandler implements Runnable {
         String message;
         try {
             while ((message = reader.readLine()) != null) {
-                System.out.println(name + ": " + message);
+                System.out.println(name + ": " + message); // print to server console
                 Server.broadcast(this, message);
             }
         } catch (IOException e) {

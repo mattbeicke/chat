@@ -1,5 +1,6 @@
 package mattb.client;
 
+import javafx.application.Platform;
 import javafx.scene.control.Label;
 
 import java.io.BufferedReader;
@@ -50,11 +51,15 @@ public class MessageListener implements Runnable {
     public void run() {
         String message;
         try {
-            while ((message = reader.readLine()) != null) {
+            while (!socket.isClosed() && (message = reader.readLine()) != null) {
                 if (chat != null) {
-                    chat.setText(chat.getText() + "\n" + message);
+                    String finalMessage = message;
+                    Platform.runLater(() -> {
+                        chat.setText(chat.getText() + "\n" + finalMessage);
+                    });
+                } else {
+                    System.out.println(message);
                 }
-                System.out.println(message);
             }
         } catch (IOException e) {
             e.printStackTrace();
