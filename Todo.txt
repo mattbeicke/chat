@@ -1,6 +1,5 @@
 left align history
 bottom align history
-fix name issue
 
 see if merging ClientGUIBackend and ClientGUI is possible (it should be?)
 
