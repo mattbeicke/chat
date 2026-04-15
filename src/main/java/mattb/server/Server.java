@@ -11,7 +11,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class Server {
     public static List<ClientHandler> clients = new CopyOnWriteArrayList<>();
 
-    public static void main(String[] args) {
+    static void main() {
         try {
             ServerSocket serverSocket = new ServerSocket(43206);
             System.out.println("Server Online");
@@ -47,5 +47,4 @@ public class Server {
             }
         }
     }
-
 }

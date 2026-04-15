@@ -26,7 +26,7 @@ public class ClientGUI extends Application {
         Scene chat = new Scene(border, 500, 500);
 
         TextField name = new TextField();
-        name.setOnAction(event -> {
+        name.setOnAction(_ -> {
             if (!name.getText().isBlank()) {
                 // do the client stuff here
                 welcome.setText("Welcome " + name.getText());

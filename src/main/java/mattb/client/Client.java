@@ -6,7 +6,7 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public class Client {
-    public static void main(String[] args) {
+    static void main() {
         Scanner input = new Scanner(System.in);
         System.out.println("What name do you want to use?");
         String name = input.nextLine();
