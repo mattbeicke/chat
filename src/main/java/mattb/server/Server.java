@@ -1,8 +1,7 @@
 package mattb.server;
 
-import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
@@ -17,15 +16,17 @@ public class Server {
             System.out.println("Server Online");
             while (true) {
                 Socket socket = serverSocket.accept();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                String name = reader.readLine();
-                String type = reader.readLine();
-                System.out.println(name + " connected!");
+                DataInputStream in = new DataInputStream(socket.getInputStream());
+                String name = in.readUTF();
+                String type = in.readUTF();
 
-                ClientHandler handler = new ClientHandler(socket, name, type);
+                ClientHandler handler = new ClientHandler(socket, name, type, in);
                 clients.add(handler);
                 Thread thread = new Thread(handler);
                 thread.start();
+
+                System.out.println("Joined the server: " + name);
+                broadcast(handler, "Joined the server: " + name);
             }
         } catch (IOException | RuntimeException e) {
             e.printStackTrace();
@@ -46,7 +47,9 @@ public class Server {
             }
 
             try {
-                client.writer.println(clientHandler.getName() + ": " + message);
+                client.out.writeInt(1);
+                client.out.writeUTF(message);
+                client.out.flush();
             } catch (Exception e) {
                 Server.clients.remove(client);
             }

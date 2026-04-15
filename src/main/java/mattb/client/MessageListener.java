@@ -3,15 +3,16 @@ package mattb.client;
 import javafx.application.Platform;
 import javafx.scene.control.Label;
 
-import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 public class MessageListener implements Runnable {
     private Socket socket;
-    private BufferedReader reader;
+    private DataInputStream in;
     private Label chat;
+    private volatile boolean running = true;
 
     /**
      * Initializes {@link MessageListener MessageListener's} reader for CLI
@@ -21,7 +22,8 @@ public class MessageListener implements Runnable {
     public MessageListener(Socket socket) {
         try {
             this.socket = socket;
-            this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.socket.setSoTimeout(1000);
+            this.in = new DataInputStream(socket.getInputStream());
             this.chat = null;
         } catch (IOException e) {
             e.printStackTrace();
@@ -37,7 +39,7 @@ public class MessageListener implements Runnable {
     public MessageListener(Socket socket, Label chat) {
         try {
             this.socket = socket;
-            this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.in = new DataInputStream(socket.getInputStream());
             this.chat = chat;
         } catch (IOException e) {
             e.printStackTrace();
@@ -49,16 +51,24 @@ public class MessageListener implements Runnable {
      */
     @Override
     public void run() {
-        String message;
         try {
-            while (!socket.isClosed() && (message = reader.readLine()) != null) {
-                if (chat != null) {
-                    String finalMessage = message;
-                    Platform.runLater(() -> {
-                        chat.setText(chat.getText() + "\n" + finalMessage);
-                    });
-                } else {
-                    System.out.println(message);
+            while (running) {
+                try {
+                    int dataType = in.readInt();
+
+                    switch (dataType) {
+                        case 1:
+                            String message = in.readUTF();
+                            if (chat != null) {
+                                Platform.runLater(() -> chat.setText(chat.getText() + "\n" + message));
+                            } else {
+                                System.out.println(message);
+                            }
+                            break;
+                        case 2:
+                            break;
+                    }
+                } catch (SocketTimeoutException ignored) {
                 }
             }
         } catch (IOException e) {
@@ -68,12 +78,16 @@ public class MessageListener implements Runnable {
         }
     }
 
+    public void shutdown() {
+        running = false;
+    }
+
     /**
-     * Shuts down the {@link MessageListener MessageListener's} {@link BufferedReader} and {@link Socket}
+     * Shuts down the {@link MessageListener MessageListener's} {@link DataInputStream} and {@link Socket}
      */
     private void closeEverything() {
         try {
-            if (reader != null) reader.close();
+            if (in != null) in.close();
             if (socket != null) socket.close();
         } catch (IOException e) {
             e.printStackTrace();

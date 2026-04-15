@@ -13,12 +13,12 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.Socket;
 
 public class ClientGUI extends Application {
-    private PrintWriter writer;
+    private DataOutputStream out;
 
     @Override
     public void start(Stage stage) {
@@ -97,9 +97,10 @@ public class ClientGUI extends Application {
             MessageListener listener = new MessageListener(socket, chat);
             new Thread(listener).start();
 
-            writer = new PrintWriter(socket.getOutputStream(), true);
-            writer.println(name);
-            writer.println("GUI");
+            out = new DataOutputStream(socket.getOutputStream());
+            out.writeUTF(name);
+            out.writeUTF("GUI");
+            out.flush();
         } catch (IOException | RuntimeException e) {
             System.out.println("Server went offline or other issue encountered");
         }
@@ -111,6 +112,12 @@ public class ClientGUI extends Application {
      * @param message what to send to the server
      */
     public void writeMessage(String message) {
-        writer.println(message);
+        try {
+            out.writeInt(1);
+            out.writeUTF(message);
+            out.flush();
+        } catch (IOException e) {
+            System.out.println("Server went offline or other issue encountered");
+        }
     }
 }

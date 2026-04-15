@@ -1,9 +1,8 @@
 package mattb.server;
 
-import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable {
@@ -12,8 +11,8 @@ public class ClientHandler implements Runnable {
     }
 
     private Socket socket;
-    private BufferedReader reader;
-    public PrintWriter writer;
+    private DataInputStream in;
+    public DataOutputStream out;
     private final String name;
     private final userType type;
 
@@ -23,7 +22,7 @@ public class ClientHandler implements Runnable {
      * @param socket {@link Socket} used for your connection
      * @param name   Name of user
      */
-    public ClientHandler(Socket socket, String name, String type) {
+    public ClientHandler(Socket socket, String name, String type, DataInputStream in) {
         this.name = name;
         if (type.equals("CLI")) {
             this.type = userType.CLI;
@@ -35,8 +34,8 @@ public class ClientHandler implements Runnable {
 
         try {
             this.socket = socket;
-            this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            this.writer = new PrintWriter(socket.getOutputStream(), true);
+            this.in = in;
+            this.out = new DataOutputStream(socket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -56,27 +55,35 @@ public class ClientHandler implements Runnable {
      */
     @Override
     public void run() {
-        String message;
         try {
-            while ((message = reader.readLine()) != null) {
-                System.out.println(name + ": " + message); // print to server console
-                Server.broadcast(this, message);
+            while (true) {
+                int dataType = in.readInt();
+
+                switch (dataType) {
+                    case 1:
+                        String message = in.readUTF();
+                        System.out.println(name + ": " + message); // print to server console
+                        Server.broadcast(this, name + ": " + message);
+                        break;
+                    case 2:
+                        break;
+                }
             }
         } catch (IOException e) {
-            System.out.println(name + " disconnected");
-            Server.broadcast(this, "disconnected");
+            System.out.println("Left the server: " + name);
+            Server.broadcast(this, "Left the server: " + name);
         } finally {
             closeEverything();
         }
     }
 
     /**
-     * Shuts down the {@link ClientHandler ClientHandler's} {@link BufferedReader}, {@link PrintWriter}, and {@link Socket}
+     * Shuts down the {@link ClientHandler ClientHandler's} {@link DataInputStream}, {@link DataOutputStream}, and {@link Socket}
      */
     private void closeEverything() {
         try {
-            if (reader != null) reader.close();
-            if (writer != null) writer.close();
+            if (in != null) in.close();
+            if (out != null) out.close();
             if (socket != null) socket.close();
         } catch (IOException e) {
             e.printStackTrace();

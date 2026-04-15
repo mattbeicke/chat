@@ -1,7 +1,7 @@
 package mattb.client;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -16,12 +16,21 @@ public class ClientCLI {
             MessageListener listener = new MessageListener(socket);
             new Thread(listener).start();
 
-            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-            writer.println(name);
-            writer.println("CLI");
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            out.writeUTF(name);
+            out.writeUTF("CLI");
+            out.flush();
 
+            System.out.println("Enter '-exit' to leave");
             while (true) {
-                writer.println(input.nextLine());
+                String message = input.nextLine();
+                if (message.equals("-exit")) {
+                    listener.shutdown();
+                    break;
+                }
+                out.writeInt(1);
+                out.writeUTF(message);
+                out.flush();
             }
         } catch (IOException | RuntimeException e) {
             System.out.println("Server went offline or other issue encountered");

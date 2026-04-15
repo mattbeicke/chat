@@ -1,0 +1,5 @@
+someone sends a 2
+server sends everyone a 2
+everyone sends 3
+
+everyone who is online will have sent 3 and thus can be sent back to original user
