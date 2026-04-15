@@ -8,7 +8,7 @@ import java.util.Scanner;
 public class ClientCLI {
     static void main() {
         Scanner input = new Scanner(System.in);
-        String name = "";
+        String name;
         do {
             System.out.println("What name do you want to use?");
             name = input.nextLine();

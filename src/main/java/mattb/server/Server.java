@@ -11,27 +11,50 @@ public class Server {
     public static List<ClientHandler> clients = new CopyOnWriteArrayList<>();
 
     static void main() {
-        try {
-            ServerSocket serverSocket = new ServerSocket(43206);
-            System.out.println("Server Online");
-            while (true) {
-                Socket socket = serverSocket.accept();
-                DataInputStream in = new DataInputStream(socket.getInputStream());
-                String name = in.readUTF();
-                String type = in.readUTF();
+        try (ServerSocket serverSocket = new ServerSocket(43206)) {
+            System.out.println("Server Online (Type '-shutdown' to stop)");
 
-                ClientHandler handler = new ClientHandler(socket, name, type, in);
-                clients.add(handler);
-                Thread thread = new Thread(handler);
-                thread.start();
+            Thread consoleThread = new Thread(() -> {
+                try (java.util.Scanner scanner = new java.util.Scanner(System.in)) {
+                    while (true) {
+                        String input = scanner.nextLine();
+                        if ("-shutdown".equals(input)) {
+                            shutdown(serverSocket);
+                            break;
+                        }
+                        // add other server-level commands here
+                    }
+                }
+            });
+            consoleThread.setDaemon(true);
+            consoleThread.start();
 
-                System.out.println("Joined the server: " + name);
-                broadcastMessage(handler, "Joined the server: " + name);
+            while (!serverSocket.isClosed()) {
+                try {
+                    Socket socket = serverSocket.accept();
+                    DataInputStream in = new DataInputStream(socket.getInputStream());
+                    String name = in.readUTF();
+                    String type = in.readUTF();
+
+                    ClientHandler handler = new ClientHandler(socket, name, type, in);
+                    clients.add(handler);
+                    new Thread(handler).start();
+
+                    System.out.println("Joined the server: " + name);
+                    broadcastMessage(handler, "Joined the server: " + name);
+                } catch (IOException e) {
+                    if (serverSocket.isClosed()) {
+                        System.out.println("Server closed successfully.");
+                    } else {
+                        System.out.println("Server went offline or other issue encountered");
+                    }
+                }
             }
-        } catch (IOException | RuntimeException e) {
+        } catch (IOException ignored) {
             System.out.println("Server went offline or other issue encountered");
         }
     }
+
 
     /**
      * Broadcasts clients sent messages to all other clients (except the sender)
@@ -86,5 +109,28 @@ public class Server {
      */
     public static void removeHandler(ClientHandler clientHandler) {
         clients.remove(clientHandler);
+    }
+
+    public static void shutdown(ServerSocket serverSocket) {
+        System.out.println("Shutting down all client connections...");
+
+        for (ClientHandler client : clients) {
+            try {
+                client.out.writeInt(0);
+                client.out.writeUTF("Server is shutting down.");
+                client.out.flush();
+            } catch (IOException ignored) {
+            }
+        }
+
+        clients.clear();
+
+        try {
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
+            }
+        } catch (IOException e) {
+            System.err.println("Error closing server socket: " + e.getMessage());
+        }
     }
 }

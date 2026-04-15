@@ -66,7 +66,7 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try {
-            while (true) {
+            while (true) { // while it may be bad programming technically, changing it will not fix anything (especially as nothing is necessarily broken)
                 int dataType = in.readInt();
 
                 switch (dataType) {
