@@ -32,17 +32,13 @@ public class ClientGUI extends Application {
         history.setPrefWidth(500);
         history.setMinWidth(500);
         history.setPadding(new Insets(0, 8, 0, 8));
-        history.textProperty().addListener((_, _, _) -> {
-            history.setMinHeight(Region.USE_PREF_SIZE);
-        });
+        history.textProperty().addListener((_, _, _) -> history.setMinHeight(Region.USE_PREF_SIZE));
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setContent(history);
         scrollPane.setFitToWidth(true);
         scrollPane.setPrefViewportHeight(450);
         scrollPane.setPrefViewportWidth(500);
-        history.heightProperty().addListener((_, _, _) -> {
-            scrollPane.setVvalue(1.0d);
-        });
+        history.heightProperty().addListener((_, _, _) -> scrollPane.setVvalue(1.0d));
 
         // input field
         TextField input = new TextField();
