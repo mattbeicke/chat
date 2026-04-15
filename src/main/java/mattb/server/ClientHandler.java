@@ -37,14 +37,24 @@ public class ClientHandler implements Runnable {
             this.in = in;
             this.out = new DataOutputStream(socket.getOutputStream());
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Server went offline or other issue encountered");
         }
     }
 
+    /**
+     * Getter for client name
+     *
+     * @return name of client
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Getter for client type (CLI or GUI)
+     *
+     * @return type of client
+     */
     public String getType() {
         return type.toString();
     }
@@ -63,15 +73,17 @@ public class ClientHandler implements Runnable {
                     case 1:
                         String message = in.readUTF();
                         System.out.println(name + ": " + message); // print to server console
-                        Server.broadcast(this, name + ": " + message);
+                        Server.broadcastMessage(this, name + ": " + message);
                         break;
                     case 2:
+                        Server.sendUsers(this);
                         break;
                 }
             }
         } catch (IOException e) {
             System.out.println("Left the server: " + name);
-            Server.broadcast(this, "Left the server: " + name);
+            Server.broadcastMessage(this, "Left the server: " + name);
+            Server.removeHandler(this);
         } finally {
             closeEverything();
         }
@@ -86,7 +98,7 @@ public class ClientHandler implements Runnable {
             if (out != null) out.close();
             if (socket != null) socket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Server went offline or other issue encountered");
         }
     }
 }

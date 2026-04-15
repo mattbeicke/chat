@@ -5,10 +5,12 @@ import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -52,10 +54,22 @@ public class ClientGUI extends Application {
         });
 
         Label welcome = new Label();
+        Button swap = new Button("Who's Online");
+        swap.setOnAction(_ -> {
+            try {
+                out.writeInt(2);
+                out.flush();
+            } catch (IOException e) {
+                System.out.println("Server went offline or other issue encountered");
+            }
+        });
+        HBox hBox = new HBox(welcome, swap);
+        hBox.setAlignment(Pos.CENTER);
+        hBox.setSpacing(10);
         VBox bottom = new VBox(2);
         bottom.getChildren().addAll(new Label("  Enter messages below (press enter to send):"), input);
-        BorderPane border = new BorderPane(scrollPane, welcome, null, bottom, null);
-        BorderPane.setAlignment(welcome, Pos.CENTER);
+        BorderPane border = new BorderPane(scrollPane, hBox, null, bottom, null);
+        BorderPane.setAlignment(hBox, Pos.CENTER);
         BorderPane.setAlignment(history, Pos.BOTTOM_LEFT);
         Scene chat = new Scene(border, 500, 500);
 

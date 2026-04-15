@@ -26,7 +26,7 @@ public class MessageListener implements Runnable {
             this.in = new DataInputStream(socket.getInputStream());
             this.chat = null;
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Server went offline or other issue encountered");
         }
     }
 
@@ -42,7 +42,7 @@ public class MessageListener implements Runnable {
             this.in = new DataInputStream(socket.getInputStream());
             this.chat = chat;
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Server went offline or other issue encountered");
         }
     }
 
@@ -55,10 +55,11 @@ public class MessageListener implements Runnable {
             while (running) {
                 try {
                     int dataType = in.readInt();
+                    String message;
 
                     switch (dataType) {
                         case 1:
-                            String message = in.readUTF();
+                            message = in.readUTF();
                             if (chat != null) {
                                 Platform.runLater(() -> chat.setText(chat.getText() + "\n" + message));
                             } else {
@@ -66,18 +67,29 @@ public class MessageListener implements Runnable {
                             }
                             break;
                         case 2:
+                            message = in.readUTF();
+                            if (chat != null) {
+                                Platform.runLater(() -> chat.setText(chat.getText() + "\n\nUsers Online:\n" + message));
+                            } else {
+                                System.out.println("\nUsers Online:\n" + message);
+                            }
                             break;
+                        default:
+                            throw new RuntimeException("Unknown message from server");
                     }
                 } catch (SocketTimeoutException ignored) {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Server went offline or other issue encountered");
         } finally {
             closeEverything();
         }
     }
 
+    /**
+     * shuts down the CLI/GUI without causing a {@link java.net.SocketException}
+     */
     public void shutdown() {
         running = false;
     }
@@ -90,7 +102,7 @@ public class MessageListener implements Runnable {
             if (in != null) in.close();
             if (socket != null) socket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Server went offline or other issue encountered");
         }
     }
 }
