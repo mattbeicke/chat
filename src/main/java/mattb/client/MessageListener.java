@@ -2,6 +2,8 @@ package mattb.client;
 
 import javafx.application.Platform;
 import javafx.scene.control.Label;
+import mattb.ChatError;
+import mattb.ChatException;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -14,9 +16,9 @@ import java.net.SocketTimeoutException;
  * @author Matthew Beicke
  */
 public class MessageListener implements Runnable {
-    private Socket socket; // Socket used for your connection
-    private DataInputStream in; // The incoming data stream
-    private Label chat; // GUI chat history Label
+    private final Socket socket; // Socket used for your connection
+    private final DataInputStream in; // The incoming data stream
+    private final Label chat; // GUI chat history Label
 
     private volatile boolean running = true; // Used to tell the MessageListener to shut down
 
@@ -32,7 +34,7 @@ public class MessageListener implements Runnable {
             this.in = new DataInputStream(socket.getInputStream());
             this.chat = null;
         } catch (IOException e) {
-            System.out.println("Server went offline or other issue encountered");
+            throw new ChatException(ChatError.CLIENT_CONNECTION_FAILED);
         }
     }
 
@@ -48,7 +50,7 @@ public class MessageListener implements Runnable {
             this.in = new DataInputStream(socket.getInputStream());
             this.chat = chat;
         } catch (IOException e) {
-            System.out.println("Server went offline or other issue encountered");
+            throw new ChatException(ChatError.CLIENT_CONNECTION_FAILED);
         }
     }
 
@@ -90,14 +92,14 @@ public class MessageListener implements Runnable {
                             }
                             break;
                         default:
-                            throw new RuntimeException("Unknown message from server");
+                            throw new ChatException(ChatError.UNKNOWN_MESSAGE_TYPE);
                     }
                 } catch (
                         SocketTimeoutException ignored) { // This is used to gracefully exit the infinite loop when running goes false
                 }
             }
         } catch (IOException e) {
-            System.out.println("Server went offline or other issue encountered");
+            throw new ChatException(ChatError.CLIENT_RECEIVE_FAILED);
         } finally {
             closeEverything();
         }
@@ -125,7 +127,7 @@ public class MessageListener implements Runnable {
             if (in != null) in.close();
             if (socket != null) socket.close();
         } catch (IOException e) {
-            System.out.println("Server went offline or other issue encountered");
+            throw new ChatException(ChatError.CLIENT_SHUTDOWN_FAILED);
         }
     }
 }

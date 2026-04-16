@@ -14,6 +14,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import mattb.ChatError;
+import mattb.ChatException;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -70,7 +72,7 @@ public class ClientGUI extends Application {
                 out.writeInt(2);
                 out.flush();
             } catch (IOException e) {
-                System.out.println("Server went offline or other issue encountered");
+                throw new ChatException(ChatError.CLIENT_SEND_FAILED);
             }
         });
         HBox hBox = new HBox(welcome, whoOnline);
@@ -121,17 +123,22 @@ public class ClientGUI extends Application {
      * @param name User's inputted name (to be sent to server)
      */
     private void backend(Label chat, String name) {
+        Socket socket;
         try {
-            Socket socket = new Socket("localhost", 43206);
+             socket = new Socket("localhost", 43206);
             MessageListener listener = new MessageListener(socket, chat);
             new Thread(listener).start();
+        } catch (IOException e) {
+            throw new ChatException(ChatError.CLIENT_CONNECTION_FAILED);
+        }
 
+        try{
             out = new DataOutputStream(socket.getOutputStream());
             out.writeUTF(name);
             out.writeUTF("GUI");
             out.flush();
-        } catch (IOException | RuntimeException e) {
-            System.out.println("Server went offline or other issue encountered");
+        } catch (IOException e) {
+            throw new ChatException(ChatError.CLIENT_SEND_FAILED);
         }
     }
 
@@ -146,7 +153,7 @@ public class ClientGUI extends Application {
             out.writeUTF(message);
             out.flush();
         } catch (IOException e) {
-            System.out.println("Server went offline or other issue encountered");
+            throw new ChatException(ChatError.CLIENT_SEND_FAILED);
         }
     }
 }

@@ -1,5 +1,8 @@
 package mattb.server;
 
+import mattb.ChatError;
+import mattb.ChatException;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -39,7 +42,7 @@ public class Server {
                 try {
                     Socket socket = serverSocket.accept();
                     DataInputStream in = new DataInputStream(socket.getInputStream());
-                    String name = in.readUTF(); // First thing sent will always be name
+                    String name = in.readUTF(); // First thing sent will always be a client's name
                     String type = in.readUTF(); // Second thing sent will always be type
 
                     ClientHandler handler = new ClientHandler(socket, name, type, in);
@@ -52,12 +55,12 @@ public class Server {
                     if (serverSocket.isClosed()) {
                         System.out.println("Server closed successfully.");
                     } else {
-                        System.out.println("Server went offline or other issue encountered");
+                        throw new ChatException(ChatError.SERVER_SHUTDOWN_FAILED);
                     }
                 }
             }
-        } catch (IOException ignored) {
-            System.out.println("Server went offline or other issue encountered");
+        } catch (IOException e) {
+            throw new ChatException(ChatError.SERVER_CONNECTION_FAILED);
         }
     }
 
@@ -104,7 +107,8 @@ public class Server {
             clientHandler.out.writeInt(2);
             clientHandler.out.writeUTF(String.valueOf(out));
             clientHandler.out.flush();
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            throw new ChatException(ChatError.SERVER_SEND_FAILED);
         }
     }
 
@@ -123,14 +127,15 @@ public class Server {
      * @param serverSocket {@link ServerSocket} that the server is running
      */
     public static void shutdown(ServerSocket serverSocket) {
-        System.out.println("Shutting down all client connections...");
+        System.out.println("Shutting down all client connections");
 
         for (ClientHandler client : clients) { // Sends shut down command and message to all clients
             try {
                 client.out.writeInt(0);
                 client.out.writeUTF("Server is shutting down.");
                 client.out.flush();
-            } catch (IOException ignored) {
+            } catch (IOException e) {
+                throw new ChatException(ChatError.SERVER_SEND_FAILED);
             }
         }
 
@@ -141,7 +146,7 @@ public class Server {
                 serverSocket.close();
             }
         } catch (IOException e) {
-            System.err.println("Error closing server socket: " + e.getMessage());
+            throw new ChatException(ChatError.SERVER_SHUTDOWN_FAILED);
         }
     }
 }

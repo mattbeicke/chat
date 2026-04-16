@@ -1,5 +1,8 @@
 package mattb.server;
 
+import mattb.ChatError;
+import mattb.ChatException;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -18,8 +21,8 @@ public class ClientHandler implements Runnable {
         CLI, GUI
     }
 
-    private Socket socket; // The server side of a client's socket
-    private DataInputStream in; // Where messages from the client come from
+    private final Socket socket; // The server side of a client's socket
+    private final DataInputStream in; // Where messages from the client come from
     public DataOutputStream out; // Where message to the client go
     private final String name; // Client's name
     private final clientType type; // Client's type (from the enum above)
@@ -39,7 +42,7 @@ public class ClientHandler implements Runnable {
         } else if (type.equals("GUI")) {
             this.type = clientType.GUI;
         } else {
-            throw new RuntimeException("Client type does not exist");
+            throw new ChatException(ChatError.UNKNOWN_CLIENT_TYPE);
         }
 
         try {
@@ -47,7 +50,7 @@ public class ClientHandler implements Runnable {
             this.in = in;
             this.out = new DataOutputStream(socket.getOutputStream());
         } catch (IOException e) {
-            System.out.println("Server went offline or other issue encountered");
+            throw new ChatException(ChatError.SERVER_CONNECTION_FAILED);
         }
     }
 
@@ -108,7 +111,7 @@ public class ClientHandler implements Runnable {
             if (out != null) out.close();
             if (socket != null) socket.close();
         } catch (IOException e) {
-            System.out.println("Server went offline or other issue encountered");
+            throw new ChatException(ChatError.SERVER_CLIENT_SHUTDOWN_FAILED);
         }
     }
 }

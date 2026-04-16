@@ -1,5 +1,8 @@
 package mattb.client;
 
+import mattb.ChatError;
+import mattb.ChatException;
+
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
@@ -44,12 +47,8 @@ public class ClientCLI {
                     listener.shutdown();
                     break;
                 } else if (message.equals("-users")) { // User requests user list
-                    try {
-                        out.writeInt(2);
-                        out.flush();
-                    } catch (IOException e) {
-                        System.out.println("Server went offline or other issue encountered");
-                    }
+                    out.writeInt(2);
+                    out.flush();
                 } else if (message.equals("-help")) { // User wants to see all available commands
                     System.out.println();
                     System.out.println("""
@@ -69,8 +68,8 @@ public class ClientCLI {
                     set = false;
                 }
             }
-        } catch (IOException | RuntimeException e) {
-            System.out.println("Server went offline or other issue encountered");
+        } catch (IOException e) {
+            throw new ChatException(ChatError.CLIENT_SEND_FAILED);
         }
     }
 }
