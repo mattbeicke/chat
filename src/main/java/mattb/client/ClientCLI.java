@@ -15,23 +15,38 @@ import java.util.Scanner;
  */
 public class ClientCLI {
     static void main() {
+        main(43206);
+    }
+
+    /**
+     * Split from regular main above because of tests
+     *
+     * @param port Port to use for server socket
+     */
+    static void main(int port) {
         Scanner input = new Scanner(System.in);
         String name;
+        DataOutputStream out;
+        MessageListener listener;
         do {
             System.out.println("What name do you want to use?");
             name = input.nextLine();
         } while (name.isBlank()); // Force user to enter a name that can be displayed to other users
 
         try {
-            Socket socket = new Socket("localhost", 43206);
-            MessageListener listener = new MessageListener(socket);
+            Socket socket = new Socket("localhost", port);
+            listener = new MessageListener(socket);
             new Thread(listener).start();
 
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            out = new DataOutputStream(socket.getOutputStream());
             out.writeUTF(name);
             out.writeUTF("CLI");
             out.flush();
+        } catch (IOException e) {
+            throw new ChatException(ChatError.CLIENT_CONNECTION_FAILED);
+        }
 
+        try {
             System.out.println("Enter '-exit' to leave or -help to view list of commands");
             boolean set = false; // Used when deciding to send a message that starts with a '-' or not
             String prev = "";
