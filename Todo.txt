@@ -1,1 +1,1 @@
-when server shuts down, it tells all MessageListeners to shut down which they do but their clients don't (both types)
+fix up exceptions (make ChatException class)

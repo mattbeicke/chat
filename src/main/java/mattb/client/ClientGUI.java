@@ -19,14 +19,27 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
+/**
+ * Graphical User Interface for displaying the chat
+ *
+ * @author Matthew Beicke
+ */
 public class ClientGUI extends Application {
-    private DataOutputStream out;
+    private DataOutputStream out; // Output stream, used when sending your chats to the server
 
+    /**
+     * Initialization for the GUI
+     *
+     * @param stage the primary stage for this application, onto which
+     *              the application scene can be set.
+     *              Applications may create other stages, if needed, but they will not be
+     *              primary stages.
+     */
     @Override
     public void start(Stage stage) {
         stage.setTitle("Chat");
 
-        // setup chat history
+        // Setup chat history Label
         Label history = new Label();
         history.setWrapText(true);
         history.setPrefWidth(500);
@@ -40,7 +53,7 @@ public class ClientGUI extends Application {
         scrollPane.setPrefViewportWidth(500);
         history.heightProperty().addListener((_, _, _) -> scrollPane.setVvalue(1.0d));
 
-        // input field
+        // Input field
         TextField input = new TextField();
         input.setOnAction(_ -> {
             if (!input.getText().isBlank()) {
@@ -49,9 +62,10 @@ public class ClientGUI extends Application {
             }
         });
 
+        // Set up top bar
         Label welcome = new Label();
-        Button swap = new Button("Who's Online");
-        swap.setOnAction(_ -> {
+        Button whoOnline = new Button("Who's Online");
+        whoOnline.setOnAction(_ -> {
             try {
                 out.writeInt(2);
                 out.flush();
@@ -59,16 +73,21 @@ public class ClientGUI extends Application {
                 System.out.println("Server went offline or other issue encountered");
             }
         });
-        HBox hBox = new HBox(welcome, swap);
+        HBox hBox = new HBox(welcome, whoOnline);
         hBox.setAlignment(Pos.CENTER);
         hBox.setSpacing(10);
+
+        // Set up bottom bar
         VBox bottom = new VBox(2);
         bottom.getChildren().addAll(new Label("  Enter messages below (press enter to send):"), input);
+
+        // Set up BorderPane
         BorderPane border = new BorderPane(scrollPane, hBox, null, bottom, null);
         BorderPane.setAlignment(hBox, Pos.CENTER);
         BorderPane.setAlignment(history, Pos.BOTTOM_LEFT);
         Scene chat = new Scene(border, 500, 500);
 
+        // Process user entering name
         TextField name = new TextField();
         name.setOnAction(_ -> {
             if (!name.getText().isBlank()) {
@@ -96,12 +115,12 @@ public class ClientGUI extends Application {
     }
 
     /**
-     * Initializes Client GUI's backend
+     * Initializes Client GUI's backend (setting up {@link Socket} and {@link MessageListener})
      *
      * @param chat {@link Label} that contains the chat history
-     * @param name user's inputted name (to be sent to server)
+     * @param name User's inputted name (to be sent to server)
      */
-    public void backend(Label chat, String name) {
+    private void backend(Label chat, String name) {
         try {
             Socket socket = new Socket("localhost", 43206);
             MessageListener listener = new MessageListener(socket, chat);
@@ -119,9 +138,9 @@ public class ClientGUI extends Application {
     /**
      * Sends your chat to the server
      *
-     * @param message what to send to the server
+     * @param message The message you sent in the chat
      */
-    public void writeMessage(String message) {
+    private void writeMessage(String message) {
         try {
             out.writeInt(1);
             out.writeUTF(message);

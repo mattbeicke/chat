@@ -5,31 +5,41 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
+/**
+ * This class is used to handle receiving and redistributing input from the Clients
+ *
+ * @author Matthew Beicke
+ */
 public class ClientHandler implements Runnable {
-    enum userType {
+    /**
+     * Clients are either using a GUI or CLI
+     */
+    enum clientType {
         CLI, GUI
     }
 
-    private Socket socket;
-    private DataInputStream in;
-    public DataOutputStream out;
-    private final String name;
-    private final userType type;
+    private Socket socket; // The server side of a client's socket
+    private DataInputStream in; // Where messages from the client come from
+    public DataOutputStream out; // Where message to the client go
+    private final String name; // Client's name
+    private final clientType type; // Client's type (from the enum above)
 
     /**
-     * Initializes {@link ClientHandler ClientHandler's} reader and writer
+     * Initializes the {@link DataInputStream} and {@link DataOutputStream} for {@link ClientHandler this}
      *
      * @param socket {@link Socket} used for your connection
-     * @param name   Name of user
+     * @param name   Name of client
+     * @param type   Client type (see {@link clientType})
+     * @param in     The {@link DataInputStream} that is to be used to receive data from the client
      */
     public ClientHandler(Socket socket, String name, String type, DataInputStream in) {
         this.name = name;
-        if (type.equals("CLI")) {
-            this.type = userType.CLI;
+        if (type.equals("CLI")) { // Determine which in the enum to used
+            this.type = clientType.CLI;
         } else if (type.equals("GUI")) {
-            this.type = userType.GUI;
+            this.type = clientType.GUI;
         } else {
-            throw new RuntimeException("User type does not exist");
+            throw new RuntimeException("Client type does not exist");
         }
 
         try {
@@ -44,7 +54,7 @@ public class ClientHandler implements Runnable {
     /**
      * Getter for client name
      *
-     * @return name of client
+     * @return Name of client
      */
     public String getName() {
         return name;
@@ -53,29 +63,29 @@ public class ClientHandler implements Runnable {
     /**
      * Getter for client type (CLI or GUI)
      *
-     * @return type of client
+     * @return Type of client
      */
     public String getType() {
         return type.toString();
     }
 
     /**
-     * Prints out whatever is recieved from the client to the servers console and also broadcasts it to all other clients
+     * Prints out whatever is recieved from the client to the {@link Server} console and also initiates the broadcast of it to all other clients
      * It also prints and broadcasts a message when a client disconnects
      */
     @Override
     public void run() {
         try {
-            while (true) { // while it may be bad programming technically, changing it will not fix anything (especially as nothing is necessarily broken)
+            while (true) { // While it may be bad programming technically, changing this to not be a while (true) will not fix anything as nothing is broken
                 int dataType = in.readInt();
 
                 switch (dataType) {
-                    case 1:
+                    case 1: // User sends a message
                         String message = in.readUTF();
-                        System.out.println(name + ": " + message); // print to server console
+                        System.out.println(name + ": " + message); // Print to server console
                         Server.broadcastMessage(this, name + ": " + message);
                         break;
-                    case 2:
+                    case 2: // User wants user list
                         Server.sendUsers(this);
                         break;
                 }
@@ -90,7 +100,7 @@ public class ClientHandler implements Runnable {
     }
 
     /**
-     * Shuts down the {@link ClientHandler ClientHandler's} {@link DataInputStream}, {@link DataOutputStream}, and {@link Socket}
+     * Closes the {@link DataInputStream}, {@link DataOutputStream}, and {@link Socket} for {@link ClientHandler this}
      */
     private void closeEverything() {
         try {

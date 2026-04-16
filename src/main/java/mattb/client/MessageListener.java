@@ -8,16 +8,22 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 
+/**
+ * This class is used to handle receiving and displaying input from the Server
+ *
+ * @author Matthew Beicke
+ */
 public class MessageListener implements Runnable {
-    private Socket socket;
-    private DataInputStream in;
-    private Label chat;
-    private volatile boolean running = true;
+    private Socket socket; // Socket used for your connection
+    private DataInputStream in; // The incoming data stream
+    private Label chat; // GUI chat history Label
+
+    private volatile boolean running = true; // Used to tell the MessageListener to shut down
 
     /**
-     * Initializes {@link MessageListener MessageListener's} reader for CLI
+     * Initializes the {@link DataInputStream} for {@link MessageListener this} that's used for the {@link ClientCLI CLI}
      *
-     * @param socket {@link Socket} used for your connection
+     * @param socket Your connection {@link Socket}
      */
     public MessageListener(Socket socket) {
         try {
@@ -31,10 +37,10 @@ public class MessageListener implements Runnable {
     }
 
     /**
-     * Initializes {@link MessageListener MessageListener's} reader for GUI
+     * Initializes the {@link DataInputStream} for {@link MessageListener this} that's used for the {@link ClientGUI GUI}
      *
-     * @param socket {@link Socket} used for your connection
-     * @param chat   {@link Label} used to display chat
+     * @param socket Your connection {@link Socket}
+     * @param chat   {@link Label} used to display chat history
      */
     public MessageListener(Socket socket, Label chat) {
         try {
@@ -47,7 +53,7 @@ public class MessageListener implements Runnable {
     }
 
     /**
-     * Prints out whatever is recieved from the server
+     * Handles receiving of information from server and displaying it where it needs to
      */
     @Override
     public void run() {
@@ -58,7 +64,7 @@ public class MessageListener implements Runnable {
                     String message;
 
                     switch (dataType) {
-                        case 0:
+                        case 0: // Server sends shutdown command
                             message = in.readUTF();
                             if (chat != null) {
                                 Platform.runLater(() -> chat.setText(chat.getText() + "\n" + message));
@@ -67,7 +73,7 @@ public class MessageListener implements Runnable {
                             }
                             shutdown();
                             break;
-                        case 1:
+                        case 1: // Server sends text to display
                             message = in.readUTF();
                             if (chat != null) {
                                 Platform.runLater(() -> chat.setText(chat.getText() + "\n" + message));
@@ -75,7 +81,7 @@ public class MessageListener implements Runnable {
                                 System.out.println(message);
                             }
                             break;
-                        case 2:
+                        case 2: // Server sends user list
                             message = in.readUTF();
                             if (chat != null) {
                                 Platform.runLater(() -> chat.setText(chat.getText() + "\n\nUsers Online:\n" + message));
@@ -86,7 +92,8 @@ public class MessageListener implements Runnable {
                         default:
                             throw new RuntimeException("Unknown message from server");
                     }
-                } catch (SocketTimeoutException ignored) {
+                } catch (
+                        SocketTimeoutException ignored) { // This is used to gracefully exit the infinite loop when running goes false
                 }
             }
         } catch (IOException e) {
@@ -94,17 +101,24 @@ public class MessageListener implements Runnable {
         } finally {
             closeEverything();
         }
+        Platform.exit(); // Shut down GUI
+        System.exit(0); // Shut down CLI
     }
 
     /**
-     * shuts down the CLI/GUI without causing a {@link java.net.SocketException}
+     * Shuts down the {@link ClientCLI CLI}/{@link ClientGUI GUI} without causing a {@link java.net.SocketException}
      */
     public void shutdown() {
         running = false;
+        if (chat != null) {
+            Platform.runLater(() -> chat.setText(chat.getText() + "\n\nShutting down..."));
+        } else {
+            System.out.println("\nShutting down...");
+        }
     }
 
     /**
-     * Shuts down the {@link MessageListener MessageListener's} {@link DataInputStream} and {@link Socket}
+     * Closes the {@link DataInputStream} and {@link Socket} for {@link MessageListener this}
      */
     private void closeEverything() {
         try {
